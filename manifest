@@ -1,0 +1,127 @@
+#!/bin/sh
+#
+# 2013-2015 ungleich GmbH (cdist at ungleich.ch)
+#
+# This file is part of cdist.
+#
+# cdist is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# cdist is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with cdist. If not, see <http://www.gnu.org/licenses/>.
+#
+
+config_name="$(cat "$__object/parameter/config")"
+# Strip away any leading slashes
+config="${config_name##*/}"
+
+config_file="$__type/files/config/$config"
+
+if [ ! -f "$config_file" ]; then
+    echo "Unsupported nginx configuration: $config" >&2
+    exit 1
+fi
+
+if [ -f "$__object/parameter/custom-config-from-stdin" ]; then
+    custom_config="$__object/stdin"
+else
+    custom_config=""
+fi
+
+os="$(cat "$__global/explorer/os")"
+case "$os" in
+    centos)
+        nginx_http=/etc/nginx/conf.d/http.conf
+        nginx_https=/etc/nginx/conf.d/https.conf
+        restart="systemctl restart nginx"
+
+    ;;
+    debian)
+        nginx_http=/etc/nginx/sites-enabled/default
+        nginx_https=/etc/nginx/sites-enabled/default-ssl
+        restart="/etc/init.d/nginx restart"
+    ;;
+    *)
+        echo "Unsupported OS: $os" >&2
+        exit 1
+    ;;
+esac
+
+
+################################################################################
+# Nginx package
+#
+__package nginx --state present
+
+base_config="$__type/files/base_config/${os}.conf"
+require="__package/nginx" __file /etc/nginx/nginx.conf --source "$base_config" --mode 0644
+
+require="__package/nginx" __start_on_boot nginx
+
+################################################################################
+# create base / switch to type dir
+#
+mkdir "$__object/files"
+cd  "$__type/files"
+
+
+################################################################################
+# SSL / HTTPs configuration
+#
+if [ -f "$__object/parameter/ssl" ]; then
+    ssl_base="$__type/files/ssl"
+
+    # Select the ssl certificate + key
+    if [ -f "$__object/parameter/ssl-name" ]; then
+        ssl_name="$(cat "$__object/parameter/ssl-name")"
+    else
+        echo "Please select ssl certificate" >&2
+        exit 1
+    fi
+    ssl_cert="/etc/ssl/certs/${ssl_name}.crt"
+    ssl_key="/etc/ssl/private/${ssl_name}.key"
+
+    # Copy SSL certificates
+    require="__package/nginx" __link /etc/nginx/ssl.crt \
+        --source "$ssl_cert" --type symbolic
+
+    require="__package/nginx" __link /etc/nginx/ssl.key \
+        --source "$ssl_key" --type symbolic
+
+    cat nginx-header nginx-header-https nginx-header-generic $config_file $custom_config nginx-footer > "$__object/files/nginx-https"
+    
+    require="__package/nginx" __file "$nginx_https" \
+        --source "$__object/files/nginx-https"
+
+    if [ ! -f "$__object/parameter/ssl-no-redirect" ]; then
+        if [ -f "$__object/parameter/ssl-custom-redirect" ]; then
+            ssl_redirect_host=$(cat "$__object/parameter/ssl-custom-redirect")
+        else
+            ssl_redirect_host='$host'
+        fi
+
+        ssl_redirect_file="$__object/files/nginx-redirect-http-to-https"
+        echo "    rewrite ^ https://$ssl_redirect_host\$request_uri? permanent;" > "$ssl_redirect_file"
+    fi
+
+else
+    ssl_redirect_file=""
+fi
+
+################################################################################
+# HTTP configuration
+#
+# Create HTTP configuration file
+cat nginx-header nginx-header-http nginx-header-generic \
+    $ssl_redirect_file $config_file $custom_config \
+    nginx-footer > "$__object/files/nginx-http"
+
+require="__package/nginx" __file "$nginx_http"  \
+    --source "$__object/files/nginx-http"
