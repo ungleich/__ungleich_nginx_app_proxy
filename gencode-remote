@@ -25,7 +25,7 @@ case "$os" in
         restart="/etc/init.d/nginx reload"
     ;;
     debian)
-        case "$os_version" in)
+        case "$os_version" in
             [1-7]*)
                 restart="/etc/init.d/nginx restart"
             ;;
