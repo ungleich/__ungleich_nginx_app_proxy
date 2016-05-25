@@ -1,1 +1,1 @@
-man.text
+man.rst
