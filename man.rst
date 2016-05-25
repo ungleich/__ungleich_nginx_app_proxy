@@ -1,11 +1,8 @@
 cdist-type__ungleich_nginx_app_proxy(7)
 =======================================
+Application proxy via nginx
+
 ungleich GmbH <cdist--@--ungleich.ch>
-
-
-NAME
-----
-cdist-type__ungleich_nginx_app_proxy - Application proxy via nginx
 
 
 DESCRIPTION
@@ -27,52 +24,55 @@ This type was developed and sponsored by Panter AG (www.panter.ch).
 
 REQUIRED PARAMETERS
 -------------------
-config::
+config
     Which application proxy to provide
 
 
 OPTIONAL PARAMETERS
 -------------------
-ssl-name::
+ssl-name
     Select the ssl certificate
-ssl-custom-redirect::
+
+ssl-custom-redirect
     Define where to redirect for ssl instead of $host
 
 
 BOOLEAN PARAMETERS
 ------------------
-ssl::
+ssl
     Enable SSL
-ssl-no-redirect::
+
+ssl-no-redirect
     Disable http -> https redirect (both http and https are accessable)
-custom-config-from-stdin::
+
+custom-config-from-stdin
     Insert this configuration from stdin after the generic part
 
 
 EXAMPLES
 --------
 
---------------------------------------------------------------------------------
-__ungleich_nginx_app_proxy --config rails
+.. code-block:: sh
 
-__ungleich_nginx_app_proxy --config jetty --ssl
+    __ungleich_nginx_app_proxy --config rails
 
-# Select certificate below /etc/ssl/certs/${ssl_name}.crt
-# Select key below /etc/ssl/private/${ssl_name}.key
-__ungleich_nginx_app_proxy --config jetty --ssl \
-    --ssl-name test.example.org
+    __ungleich_nginx_app_proxy --config jetty --ssl
 
-__ungleich_nginx_app_proxy --config rails --custom-config-from-stdin << eof
+    # Select certificate below /etc/ssl/certs/${ssl_name}.crt
+    # Select key below /etc/ssl/private/${ssl_name}.key
+    __ungleich_nginx_app_proxy --config jetty --ssl \
+        --ssl-name test.example.org
 
-    # some aditional nginx config
+    __ungleich_nginx_app_proxy --config rails --custom-config-from-stdin << eof
 
-eof
---------------------------------------------------------------------------------
+        # some aditional nginx config
+
+    eof
 
 
 SEE ALSO
 --------
-- cdist-type(7)
+- `cdist-type(7) <cdist-type.html>`_
 
 
 COPYING
