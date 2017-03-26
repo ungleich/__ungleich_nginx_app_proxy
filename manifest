@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# 2013-2015 ungleich GmbH (cdist at ungleich.ch)
+# 2013-2017 ungleich GmbH (cdist at ungleich.ch)
 #
 # This file is part of cdist.
 #
@@ -44,6 +44,11 @@ case "$os" in
 
     ;;
     debian)
+        nginx_http=/etc/nginx/sites-enabled/default
+        nginx_https=/etc/nginx/sites-enabled/default-ssl
+        restart="systemctl restart nginx"
+    ;;
+    devuan)
         nginx_http=/etc/nginx/sites-enabled/default
         nginx_https=/etc/nginx/sites-enabled/default-ssl
         restart="/etc/init.d/nginx restart"
@@ -96,7 +101,7 @@ if [ -f "$__object/parameter/ssl" ]; then
         --source "$ssl_key" --type symbolic
 
     cat nginx-header nginx-header-https nginx-header-generic $config_file $custom_config nginx-footer > "$__object/files/nginx-https"
-    
+
     require="__package/nginx" __file "$nginx_https" \
         --source "$__object/files/nginx-https"
 
