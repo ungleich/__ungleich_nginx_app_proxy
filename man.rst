@@ -36,6 +36,8 @@ ssl-name
 ssl-custom-redirect
     Define where to redirect for ssl instead of $host
 
+domain
+    Define the domain for Let's Encrypt
 
 BOOLEAN PARAMETERS
 ------------------
@@ -44,6 +46,9 @@ ssl
 
 ssl-no-redirect
     Disable http -> https redirect (both http and https are accessable)
+
+letsencrypt
+    Enable Let's Encrypt for SSL
 
 custom-config-from-stdin
     Insert this configuration from stdin after the generic part
@@ -63,6 +68,8 @@ EXAMPLES
     __ungleich_nginx_app_proxy --config jetty --ssl \
         --ssl-name test.example.org
 
+    __ungleich_nginx_app_proxy --config rails --letsencrypt --domain test.example.org
+    
     __ungleich_nginx_app_proxy --config rails --custom-config-from-stdin << eof
 
         # some aditional nginx config
