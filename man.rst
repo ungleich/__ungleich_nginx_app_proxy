@@ -26,6 +26,8 @@ REQUIRED PARAMETERS
 -------------------
 config
     Which application proxy to provide
+dh
+    Keysize for Diffie-Hellman. A size of 2048 bit is recommended.
 
 
 OPTIONAL PARAMETERS
@@ -59,18 +61,19 @@ EXAMPLES
 
 .. code-block:: sh
 
-    __ungleich_nginx_app_proxy --config rails
+    __ungleich_nginx_app_proxy --config rails --dh 2048
 
-    __ungleich_nginx_app_proxy --config jetty --ssl
+    __ungleich_nginx_app_proxy --config jetty --ssl --dh 2048
 
     # Select certificate below /etc/ssl/certs/${ssl_name}.crt
     # Select key below /etc/ssl/private/${ssl_name}.key
-    __ungleich_nginx_app_proxy --config jetty --ssl \
-        --ssl-name test.example.org
+    __ungleich_nginx_app_proxy --config jetty --dh 2048 \
+    --ssl --ssl-name test.example.org
 
-    __ungleich_nginx_app_proxy --config rails --letsencrypt --domain test.example.org
+    __ungleich_nginx_app_proxy --config rails --dh 2048 \
+    --letsencrypt --domain test.example.org
     
-    __ungleich_nginx_app_proxy --config rails --custom-config-from-stdin << eof
+    __ungleich_nginx_app_proxy --config rails --dh 2048 --custom-config-from-stdin << eof
 
         # some aditional nginx config
 

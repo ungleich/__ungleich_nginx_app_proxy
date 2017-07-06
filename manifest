@@ -26,6 +26,7 @@ config_file="$__type/files/config/$config"
 
 domain="$(cat "$__object/parameter/domain")"
 
+dh="$(cat "$__object/parameter/dh")"
 
 if [ ! -f "$config_file" ]; then
     echo "Unsupported nginx configuration: $config" >&2
@@ -124,19 +125,24 @@ elif [ -f "$__object/parameter/letsencrypt" ]; then
     
     # Copy SSL certificates
     require="__package/nginx" __link /etc/nginx/ssl.crt \
-        --source /etc/letsencrypt/live/"$domain"/cert.pem --type symbolic
+        --source /etc/letsencrypt/live/"$domain"/fullchain.pem --type symbolic
 
     require="__package/nginx" __link /etc/nginx/ssl.key \
         --source /etc/letsencrypt/live/"$domain"/privkey.pem --type symbolic
 
     require="__package/nginx" __link /etc/nginx/chain.pem \
-        --source /etc/letsencrypt/live/"$domain"/chain.pem --type symbolic
+        --source /etc/letsencrypt/live/"$domain"/cert.pem --type symbolic
     
     cat nginx-header nginx-header-https-letsencrypt nginx-header-generic $config_file $custom_config nginx-footer > "$__object/files/nginx-https"
     
     # create random 48 bit file as ticketkey    
     head -c 48 /dev/urandom  |  __file /etc/nginx/nginx-ticketkey --source - 
     
+    # create Diffie-Hellman key and store it under "$__files/pemfiles"
+
+    require="__package/nginx" __ungleich_dhparam --keysize $dh --destination "$__files/pemfiles" "$__target_host" 
+    require="__ungleich_dhparam/$__target_host" __file /etc/nginx/dhparam.pem --source "$__files/pemfiles/"$__target_host"_dhparam.pem"
+
     require="__package/nginx" __file "$nginx_https" \
         --source "$__object/files/nginx-https"
 
