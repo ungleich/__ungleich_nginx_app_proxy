@@ -111,6 +111,11 @@ if [ -f "$__object/parameter/ssl" ]; then
     require="__package/nginx" __file "$nginx_https" \
         --source "$__object/files/nginx-https"
 
+if [ -f "$__object/parameter/ssl" ] & [ -f "$__object/parameter/letsencrypt" ]; then
+    echo "You can't use the ssl and letsencrypt parameter at the same time." >&2
+    exit 1
+fi
+
 # SSL with Let's Encrypt
 # This only added LE to the configuration file. You need a LE cdist type,too.
 elif [ -f "$__object/parameter/letsencrypt" ]; then

@@ -44,13 +44,13 @@ domain
 BOOLEAN PARAMETERS
 ------------------
 ssl
-    Enable SSL
+    Enable SSL. You can't use the parameter at the same time with the letsencrypt parameter.
 
 ssl-no-redirect
     Disable http -> https redirect (both http and https are accessable)
 
 letsencrypt
-    Enable Let's Encrypt for SSL
+    Enable Let's Encrypt for SSL. You can't use the parameter at the same time with the ssl parameter.
 
 custom-config-from-stdin
     Insert this configuration from stdin after the generic part
