@@ -1,3 +1,4 @@
 ssl-name
 ssl-custom-redirect
-domain
+ssl-cert
+ssl-key

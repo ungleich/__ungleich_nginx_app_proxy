@@ -95,6 +95,19 @@ if [ -f "$__object/parameter/ssl" ]; then
         exit 1
     fi
 
+if [ -f "$__object/parameter/ssl-cert" -a  -f "$__object/parameter/ssl-key" ]; then
+    else
+		if [ -f "$__object/parameter/ssl-name"]; then
+		else
+		echo "Missing parameter" >&2
+		exit 1
+fi
+
+    if [ -f "$__object/parameter/ssl-cert" ]; then
+        
+    else
+        ssl_cert="/etc/ssl/certs/${ssl_cert}.crt"
+    fi
     
     ssl_cert="/etc/ssl/certs/${ssl_name}.crt"
     ssl_key="/etc/ssl/private/${ssl_name}.key"
@@ -111,38 +124,6 @@ if [ -f "$__object/parameter/ssl" ]; then
     require="__package/nginx" __file "$nginx_https" \
         --source "$__object/files/nginx-https"
 
-if [ -f "$__object/parameter/ssl" -a  -f "$__object/parameter/letsencrypt" ]; then
-    echo "You can't use the ssl and letsencrypt parameter at the same time." >&2
-    exit 1
-fi
-
-# SSL with Let's Encrypt
-# This only added LE to the configuration file. You need a LE cdist type,too.
-elif [ -f "$__object/parameter/letsencrypt" ]; then
-    ssl_base="$__type/files/letsencrypt"
-        
-    if [ -f "$__object/parameter/domain" ]; then
-        domain="$(cat "$__object/parameter/domain")"
-    else
-        echo "Please add a valid domain" >&2
-        exit 1
-    fi
-    
-    # Copy SSL certificates
-    require="__package/nginx" __link /etc/nginx/ssl.crt \
-        --source /etc/letsencrypt/live/"$domain"/fullchain.pem --type symbolic
-
-    require="__package/nginx" __link /etc/nginx/ssl.key \
-        --source /etc/letsencrypt/live/"$domain"/privkey.pem --type symbolic
-
-    require="__package/nginx" __link /etc/nginx/chain.pem \
-        --source /etc/letsencrypt/live/"$domain"/cert.pem --type symbolic
-    
-    cat nginx-header nginx-header-https-letsencrypt nginx-header-generic $config_file $custom_config nginx-footer > "$__object/files/nginx-https"
-    
-    # create random 48 bit file as ticketkey    
-    head -c 48 /dev/urandom  |  __file /etc/nginx/nginx-ticketkey --source - 
-    
     # create Diffie-Hellman key and store it under "$__files/pemfiles"
 
     require="__package/nginx" __ungleich_dhparam --keysize $dh --destination "$__files/pemfiles" "$__target_host" 
