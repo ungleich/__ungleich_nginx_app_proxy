@@ -84,21 +84,21 @@ cd  "$__type/files"
 # SSL / HTTPs configuration
 #
 if [ -f "$__object/parameter/ssl" ]; then
-    if [ ! -f "$__object/parameter/ssl-cert" ] && [ -f "$__object/parameter/ssl-key" ]; then
+    if [ ! -f "$__object/parameter/ssl-cert" ] || [ -f "$__object/parameter/ssl-key" ]; then
 	        echo "Missing parameter" >&2
         else
             ssl_cert="$(cat "$__object/parameter/ssl-cert")"
             ssl_key="$(cat "$__object/parameter/ssl-key")"
     
-    # create symlink for  SSL certificates
-    require="__package/nginx" __link /etc/nginx/ssl.crt \
-        --source "$ssl_cert" --type symbolic
+            # create symlink for SSL certificates
+            require="__package/nginx" __link /etc/nginx/ssl.crt \
+            --source "$ssl_cert" --type symbolic
 
-    require="__package/nginx" __link /etc/nginx/ssl.key \
-        --source "$ssl_key" --type symbolic
+            require="__package/nginx" __link /etc/nginx/ssl.key \
+            --source "$ssl_key" --type symbolic
     
-    # create the https nginx config
-    require="__package/nginx" __file "$nginx_https"  --owner root \
+            # create the https nginx config
+            require="__package/nginx" __file "$nginx_https"  --owner root \
             --group root \
             --mode 0644 --source - <<EOF
 #                                                                    

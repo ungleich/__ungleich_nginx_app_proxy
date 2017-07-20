@@ -63,8 +63,6 @@ EXAMPLES
 
     __ungleich_nginx_app_proxy --config rails --dh 2048
 
-    __ungleich_nginx_app_proxy --config jetty --ssl --dh 2048
-
     # Select a certificate on your machine
     __ungleich_nginx_app_proxy --config rails --dh 2048 \
     --ssl --ssl-cert "/etc/ssl/certs/ssl-cert-snakeoil.pem" \
