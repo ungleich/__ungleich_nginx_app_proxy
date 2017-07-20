@@ -1,3 +1,4 @@
+    # Rails config (240s timeout)
 
     root /home/app/app/current/public;
 

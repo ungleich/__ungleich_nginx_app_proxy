@@ -1,3 +1,4 @@
+    # Rails config
 
     root /home/app/app/current/public;
 

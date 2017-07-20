@@ -32,25 +32,25 @@ dh
 
 OPTIONAL PARAMETERS
 -------------------
-ssl-name
-    Select the ssl certificate
 
 ssl-custom-redirect
     Define where to redirect for ssl instead of $host
 
-domain
-    Define the domain for Let's Encrypt
+ssl-cert
+    Define the path where the ssl-cert is on the $host
+
+ssl-key
+    Define the path where the ssl-key is on the $host
+   
+
 
 BOOLEAN PARAMETERS
 ------------------
 ssl
-    Enable SSL. You can't use the parameter at the same time with the letsencrypt parameter.
+    Enable SSL 
 
 ssl-no-redirect
     Disable http -> https redirect (both http and https are accessable)
-
-letsencrypt
-    Enable Let's Encrypt for SSL. You can't use the parameter at the same time with the ssl parameter.
 
 custom-config-from-stdin
     Insert this configuration from stdin after the generic part
@@ -65,14 +65,16 @@ EXAMPLES
 
     __ungleich_nginx_app_proxy --config jetty --ssl --dh 2048
 
-    # Select certificate below /etc/ssl/certs/${ssl_name}.crt
-    # Select key below /etc/ssl/private/${ssl_name}.key
-    __ungleich_nginx_app_proxy --config jetty --dh 2048 \
-    --ssl --ssl-name test.example.org
-
+    # Select a certificate on your machine
     __ungleich_nginx_app_proxy --config rails --dh 2048 \
-    --letsencrypt --domain test.example.org
-    
+    --ssl --ssl-cert "/etc/ssl/certs/ssl-cert-snakeoil.pem" \
+    --ssl-key "/etc/ssl/private/ssl-cert-snakeoil.key"
+
+    # Example when you want to use Let's Encrypt
+    __ungleich_nginx_app_proxy  --config rails --dh 2048 \
+    --ssl --ssl-cert "/etc/letsencrypt/live/test.example.org/fullchain.pem" \
+    --ssl-key  "/etc/letsencrypt/live/test.example.org/privkey.pem"
+
     __ungleich_nginx_app_proxy --config rails --dh 2048 --custom-config-from-stdin << eof
 
         # some aditional nginx config
