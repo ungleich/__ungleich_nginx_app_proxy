@@ -1,3 +1,4 @@
+    # Opennebula Sunstone config
 
     root /usr/lib/one/sunstone/public/;
 

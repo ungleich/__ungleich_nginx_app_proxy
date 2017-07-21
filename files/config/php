@@ -1,3 +1,4 @@
+    # PHP config
     root /home/app/app;
 
     index index.html index.htm index.php;

@@ -1,3 +1,4 @@
+    # Jetty config
 
     root /home/app/app/public;
 

@@ -22,9 +22,8 @@ config_name="$(cat "$__object/parameter/config")"
 # Strip away any leading slashes
 config="${config_name##*/}"
 
-config_file="$__type/files/config/$config"
-
-domain="$(cat "$__object/parameter/domain")"
+config_file="$__type/files/config/$config" 
+proxy_config="$(cat "$__type/files/config/$config")"
 
 dh="$(cat "$__object/parameter/dh")"
 
@@ -85,54 +84,73 @@ cd  "$__type/files"
 # SSL / HTTPs configuration
 #
 if [ -f "$__object/parameter/ssl" ]; then
-    ssl_base="$__type/files/ssl"
-
-    # Select the ssl certificate + key
-    if [ -f "$__object/parameter/ssl-name" ]; then
-        ssl_name="$(cat "$__object/parameter/ssl-name")"
-    else
-        echo "Please select ssl certificate" >&2
-        exit 1
-    fi
-
-if [ -f "$__object/parameter/ssl-cert" -a  -f "$__object/parameter/ssl-key" ]; then
-    else
-		if [ -f "$__object/parameter/ssl-name"]; then
-		else
-		echo "Missing parameter" >&2
-		exit 1
-fi
-
-    if [ -f "$__object/parameter/ssl-cert" ]; then
-        
-    else
-        ssl_cert="/etc/ssl/certs/${ssl_cert}.crt"
-    fi
+    if [ ! -f "$__object/parameter/ssl-cert" ] || [ ! -f "$__object/parameter/ssl-key" ]  || [ ! -f "$__object/parameter/dh" ]; then
+	        echo "Missing parameter" >&2
+        else
+            ssl_cert="$(cat "$__object/parameter/ssl-cert")"
+            ssl_key="$(cat "$__object/parameter/ssl-key")"
     
-    ssl_cert="/etc/ssl/certs/${ssl_name}.crt"
-    ssl_key="/etc/ssl/private/${ssl_name}.key"
+            # create symlink for SSL certificates
+            require="__package/nginx" __link /etc/nginx/ssl.crt \
+            --source "$ssl_cert" --type symbolic
 
-    # Copy SSL certificates
-    require="__package/nginx" __link /etc/nginx/ssl.crt \
-        --source "$ssl_cert" --type symbolic
+            require="__package/nginx" __link /etc/nginx/ssl.key \
+            --source "$ssl_key" --type symbolic
+    
+            # create the https nginx config
+            require="__package/nginx" __file "$nginx_https"  --owner root \
+            --group root \
+            --mode 0644 --source - <<EOF
+#                                                                    
+# cdist maintained configuration - do not overwrite                  
+#        
 
-    require="__package/nginx" __link /etc/nginx/ssl.key \
-        --source "$ssl_key" --type symbolic
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    ssl_certificate         /etc/nginx/ssl.crt;
+    ssl_certificate_key     /etc/nginx/ssl.key;
+    ssl_dhparam             /etc/nginx/dhparam.pem;
 
-    cat nginx-header nginx-header-https nginx-header-generic $config_file $custom_config nginx-footer > "$__object/files/nginx-https"
+    # OCSP
+    ssl_stapling on;
+    ssl_stapling_verify on;
 
-    require="__package/nginx" __file "$nginx_https" \
-        --source "$__object/files/nginx-https"
+    # Chipers
+    ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
+    ssl_ciphers EECDH+AESGCM:EDH+AESGCM:EECDH:EDH:!MD5:!RC4:!LOW:!MEDIUM:!CAMELLIA:!ECDSA:!DES:!DSS:!3DES:!NULL;
+    ssl_prefer_server_ciphers on;
+    ssl_ecdh_curve secp384r1;
 
-    # create Diffie-Hellman key and store it under "$__files/pemfiles"
+    # Add extra headers
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload";
 
-    require="__package/nginx" __ungleich_dhparam --keysize $dh --destination "$__files/pemfiles" "$__target_host" 
-    require="__ungleich_dhparam/$__target_host" __file /etc/nginx/dhparam.pem --source "$__files/pemfiles/"$__target_host"_dhparam.pem"
+    # Session resumption
+    ssl_session_timeout 10m;
+    ssl_session_cache off;
+    ssl_session_tickets on;
+    ssl_session_ticket_key /etc/nginx/nginx-ticketkey;
 
-    require="__package/nginx" __file "$nginx_https" \
-        --source "$__object/files/nginx-https"
+    # Compress everything [tm]
+    gzip on;
+    gzip_static on;
+    gzip_proxied any;
 
+    # Not for silly IE
+    gzip_disable  "MSIE [1-6]\.";
+    gzip_http_version 1.0;
+    gzip_types text/plain text/xml text/css
+               text/comma-separated-values
+               text/javascript application/x-javascript
+               application/atom+xml;
 
+    ${proxy_config}
+
+    # Custom config
+    ${custom_config}    
+}
+EOF
+    fi
     if [ ! -f "$__object/parameter/ssl-no-redirect" ]; then
         if [ -f "$__object/parameter/ssl-custom-redirect" ]; then
             ssl_redirect_host=$(cat "$__object/parameter/ssl-custom-redirect")
@@ -143,7 +161,6 @@ fi
         ssl_redirect_file="$__object/files/nginx-redirect-http-to-https"
         echo "    rewrite ^ https://$ssl_redirect_host\$request_uri? permanent;" > "$ssl_redirect_file"
     fi
-
 else
     ssl_redirect_file=""
 fi
@@ -152,9 +169,36 @@ fi
 # HTTP configuration
 #
 # Create HTTP configuration file
-cat nginx-header nginx-header-http nginx-header-generic \
-    $ssl_redirect_file $config_file $custom_config \
-    nginx-footer > "$__object/files/nginx-http"
 
-require="__package/nginx" __file "$nginx_http"  \
-    --source "$__object/files/nginx-http"
+require="__package/nginx" __file "$nginx_http"  --owner root \
+            --group root \
+            --mode 0644 --source - <<EOF
+#                                                                    
+# cdist maintained configuration - do not overwrite                  
+#        
+server {
+    listen 80;
+    listen [::]:80;
+
+    # Compress everything [tm]
+    gzip on;
+    gzip_static on;
+    gzip_proxied any;
+
+    # Not for silly IE
+    gzip_disable  "MSIE [1-6]\.";
+    gzip_http_version 1.0;
+    gzip_types text/plain text/xml text/css
+               text/comma-separated-values
+               text/javascript application/x-javascript
+               application/atom+xml;
+
+    # SSL redirect
+    ${ssl_redirect_file}
+
+    ${proxy_config}
+
+    # Custom config
+    ${custom_config}    
+}
+EOF
