@@ -50,19 +50,19 @@ fi
 destination=/etc/nginx/
 
 # Create 48 bit random key for nginx
-cat <<eof
 if [ -f "$__object/parameter/ssl-cert" ] || [ -f "$__object/parameter/ssl-key" ] || [ -f "$__object/parameter/ssl"]; then
+cat <<eof
     if ! [ -f "${destination}nginx-ticketkey" ]; then
-        echo "head -c 48 /dev/urandom > /etc/nginx/nginx-ticketkey"
+        echo "head -c 48 /dev/urandom > ${destination}nginx-ticketkey"
     fi
-fi
 eof
+fi
 
 # Create the Diffie-Hellman key
 
-cat <<eof
 dh=$(cat "$__object/parameter/dh")
 
+cat <<eof
 if ! [ -f "${destination}dhparam.pem" ]; then
     echo "openssl dhparam -outform PEM -out ${destination}/dhparam.pem $dh"
 fi

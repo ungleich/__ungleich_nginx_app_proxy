@@ -83,7 +83,8 @@ cd  "$__type/files"
 ################################################################################
 # SSL / HTTPs configuration
 #
-if [ -f "$__object/parameter/ssl" ]; then
+if [ -f "$__object/parameter/ssl" ] || [ ! -f "$__object/parameter/dh" ]; then
+         echo "Missing parameter" >&2
     if [ ! -f "$__object/parameter/ssl-cert" ] || [ -f "$__object/parameter/ssl-key" ]; then
 	        echo "Missing parameter" >&2
         else
