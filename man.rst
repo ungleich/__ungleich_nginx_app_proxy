@@ -71,7 +71,7 @@ EXAMPLES
     --ssl --ssl-cert "/etc/letsencrypt/live/test.example.org/fullchain.pem" \
     --ssl-key  "/etc/letsencrypt/live/test.example.org/privkey.pem"
 
-    __ungleich_nginx_app_proxy --config rails --dh 2048 --custom-config-from-stdin << eof
+    __ungleich_nginx_app_proxy --config rails --custom-config-from-stdin << eof
 
         # some aditional nginx config
 
