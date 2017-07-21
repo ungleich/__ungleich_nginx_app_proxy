@@ -47,7 +47,7 @@ ssl-key
 BOOLEAN PARAMETERS
 ------------------
 ssl
-    Enable SSL. When used then ssl-cert and ssl-key are required parameters. 
+    Enable SSL. When used ssl-cert, ssl-key and dh are required parameters 
 
 ssl-no-redirect
     Disable http -> https redirect (both http and https are accessable)
