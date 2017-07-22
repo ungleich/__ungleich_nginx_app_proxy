@@ -158,7 +158,7 @@ EOF
             ssl_redirect_host='$host'
         fi
 
-        ssl_redirect_file=$(cat"$__object/files/nginx-redirect-http-to-https")
+        ssl_redirect_file=$(cat "$__object/files/nginx-redirect-http-to-https")
         echo "    rewrite ^ https://$ssl_redirect_host\$request_uri? permanent;" > "$ssl_redirect_file"
     fi
 else
