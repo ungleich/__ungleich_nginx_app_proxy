@@ -87,7 +87,6 @@ if [ -f "$__object/parameter/ssl" ]; then
     if [ ! -f "$__object/parameter/ssl-cert" ] || [ ! -f "$__object/parameter/ssl-key" ]  || [ ! -f "$__object/parameter/dh" ]; then
 	        echo "Missing parameter" >&2
         else
-	    if [ "$config" != nextcloud ]; then
             
             ssl_cert="$(cat "$__object/parameter/ssl-cert")"
             ssl_key="$(cat "$__object/parameter/ssl-key")"
@@ -98,7 +97,9 @@ if [ -f "$__object/parameter/ssl" ]; then
 
             require="__package/nginx" __link /etc/nginx/ssl.key \
             --source "$ssl_key" --type symbolic
-    
+	    
+        if [ "$config" != nextcloud ]; then
+         
             # create the https nginx config
             require="__package/nginx" __file "$nginx_https"  --owner root \
             --group root \
@@ -159,17 +160,7 @@ server {
     ${custom_config}    
 }
 EOF
-	  else
-	      ssl_cert="$(cat "$__object/parameter/ssl-cert")"
-	      ssl_key="$(cat "$__object/parameter/ssl-key")"
-    
-	      # create symlink for SSL certificates
-	      require="__package/nginx" __link /etc/nginx/ssl.crt \
-	      --source "$ssl_cert" --type symbolic
-
-	      require="__package/nginx" __link /etc/nginx/ssl.key \
-	      --source "$ssl_key" --type symbolic
-    
+        else 
 	      # create the https nginx config
 	      require="__package/nginx" __file "$nginx_https"  --owner root \
 	      --group root \
