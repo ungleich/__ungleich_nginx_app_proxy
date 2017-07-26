@@ -87,6 +87,8 @@ if [ -f "$__object/parameter/ssl" ]; then
     if [ ! -f "$__object/parameter/ssl-cert" ] || [ ! -f "$__object/parameter/ssl-key" ]  || [ ! -f "$__object/parameter/dh" ]; then
 	        echo "Missing parameter" >&2
         else
+	    if [ "$config" != nextcloud ]; then
+            
             ssl_cert="$(cat "$__object/parameter/ssl-cert")"
             ssl_key="$(cat "$__object/parameter/ssl-key")"
     
@@ -122,8 +124,15 @@ server {
     ssl_prefer_server_ciphers on;
     ssl_ecdh_curve secp384r1;
 
-    # Add extra headers
+    # Add headers to serve security related headers
+    # Before enabling Strict-Transport-Security headers please read into this
+    # topic first.
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload";
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Robots-Tag none;
+    add_header X-Download-Options noopen;
+    add_header X-Permitted-Cross-Domain-Policies none;
 
     # Session resumption
     ssl_session_timeout 10m;
@@ -150,7 +159,71 @@ server {
     ${custom_config}    
 }
 EOF
-    fi
+	  else
+	      ssl_cert="$(cat "$__object/parameter/ssl-cert")"
+	      ssl_key="$(cat "$__object/parameter/ssl-key")"
+    
+	      # create symlink for SSL certificates
+	      require="__package/nginx" __link /etc/nginx/ssl.crt \
+	      --source "$ssl_cert" --type symbolic
+
+	      require="__package/nginx" __link /etc/nginx/ssl.key \
+	      --source "$ssl_key" --type symbolic
+    
+	      # create the https nginx config
+	      require="__package/nginx" __file "$nginx_https"  --owner root \
+	      --group root \
+	      --mode 0644 --source - <<EOF
+#                                                                    
+# cdist maintained configuration - do not overwrite                  
+#        
+
+uptream php-handler {
+    server unix:/run/php/php7.0-fpm.sock;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    #server_name ${domain};
+    ssl_certificate         /etc/nginx/ssl.crt;
+    ssl_certificate_key     /etc/nginx/ssl.key;
+    ssl_dhparam             /etc/nginx/dhparam.pem;
+
+    # OCSP
+    ssl_stapling on;
+    ssl_stapling_verify on;
+
+    # Chipers
+    ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
+    ssl_ciphers EECDH+AESGCM:EDH+AESGCM:EECDH:EDH:!MD5:!RC4:!LOW:!MEDIUM:!CAMELLIA:!ECDSA:!DES:!DSS:!3DES:!NULL;
+    ssl_prefer_server_ciphers on;
+    ssl_ecdh_curve secp384r1;
+
+    # Add headers to serve security related headers
+    # Before enabling Strict-Transport-Security headers please read into this
+    # topic first.
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload";
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Robots-Tag none;
+    add_header X-Download-Options noopen;
+    add_header X-Permitted-Cross-Domain-Policies none;
+
+    # Session resumption
+    ssl_session_timeout 10m;
+    ssl_session_cache off;
+    ssl_session_tickets on;
+    ssl_session_ticket_key /etc/nginx/nginx-ticketkey;
+
+    ${proxy_config}
+
+    # Custom config
+    ${custom_config}    
+}
+EOF
+        fi
+    fi  
     if [ ! -f "$__object/parameter/ssl-no-redirect" ]; then
         if [ -f "$__object/parameter/ssl-custom-redirect" ]; then
             ssl_redirect_host=$(cat "$__object/parameter/ssl-custom-redirect")
@@ -171,12 +244,14 @@ fi
 #
 # Create HTTP configuration file
 
-require="__package/nginx" __file "$nginx_http"  --owner root \
+if [ "$config" != nextcloud ]; then
+    require="__package/nginx" __file "$nginx_http"  --owner root \
             --group root \
             --mode 0644 --source - <<EOF
 #                                                                    
 # cdist maintained configuration - do not overwrite                  
-#        
+#
+        
 server {
     listen 80;
     listen [::]:80;
@@ -203,3 +278,26 @@ server {
     ${custom_config}    
 }
 EOF
+
+else
+    require="__package/nginx" __file "$nginx_http"  --owner root \
+            --group root \
+            --mode 0644 --source - <<EOF
+#                                                                    
+# cdist maintained configuration - do not overwrite                  
+#     
+
+server {
+    listen [::]:80;
+    #server_name ${domain};
+    # Let's encrypt
+    #location /.well-known {
+    #    root /var/www/nextcloud;
+    #}
+
+    # enforce https
+    #return 301 https://$server_name$request_uri;
+   ${ssl_redirect_file_content}
+}
+EOF
+fi
