@@ -18,6 +18,10 @@
 # along with cdist. If not, see <http://www.gnu.org/licenses/>.
 #
 
+config_name="$(cat "$__object/parameter/config")"
+# Strip away any leading slashes
+config="${config_name##*/}"
+
 os="$(cat "$__global/explorer/os")"
 os_version="$(cat "$__global/explorer/os_version")"
 case "$os" in
@@ -67,3 +71,46 @@ if [ ! -f "${destination}dhparam.pem" ]; then
     echo "openssl dhparam -outform PEM -out ${destination}/dhparam.pem $dh"
 fi
 eof
+
+ 
+# Check for Nextcloud
+if [ "$config" != nextcloud ]; then
+    if [ ! "$os" = "debian" ]; then
+        echo "OS $os is currently not supported." >&2
+        exit 1
+    fi
+    case "$os_version" in
+        8*) 
+            :
+        ;;
+        *)  
+            echo "Unsupported version $os_version of $os." >&2
+            exit 1
+        ;;
+    esac
+
+nextcloud_uri="$(cat "$__object/parameter/uri")-$(cat "$__object/parameter/version").tar.bz2"
+db_name=$(cat "$__object/parameter/db-name")
+db_user=$(cat "$__object/parameter/db-user")
+db_pass=$(cat "$__object/parameter/db-pass")
+admin_user=$(cat "$__object/parameter/admin-user")
+admin_pass=$(cat "$__object/parameter/admin-pass")
+domain=$(cat "$__object/parameter/domain")
+
+# TODO check shasum of tar ball 
+cat <<eof
+INSTALL_STATE="$([ -d /var/www/nextcloud ] && cd /var/www/nextcloud && sudo -u www-data php occ status| grep -o true)"
+if [ ! "$INSTALL_STATE" ] ; then
+    curl -s -L ${nextcloud_uri} -o /tmp/nextcloud.tar.bz2 
+    tar -C /var/www -xvjf /tmp/nextcloud.tar.bz2 
+    rm -f /tmp/nextcloud.tar.bz2 
+    chown -R www-data:www-data /var/www/nextcloud 
+    cd /var/www/nextcloud
+    sudo -u www-data php occ maintenance:install --database \
+    "pgsql" --database-name "$db_name"  --database-user "$db_user" --database-pass \
+    $db_pass" --admin-user "$admin_user" --admin-pass "$admin_pass"
+    sudo -u www-data php occ config:system:set trusted_domains 2 --value="$domain"
+fi
+eof
+fi
+
