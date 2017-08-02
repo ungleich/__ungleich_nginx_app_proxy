@@ -14,6 +14,7 @@ Supported applications / frameworks:
 - PHP
 - RubyOnrails, 
 - Opennebula Sunstone (without VNC Proxy)
+- Nextcloud
 
 Planned: 
 
@@ -32,7 +33,6 @@ dh
 
 OPTIONAL PARAMETERS
 -------------------
-
 ssl-custom-redirect
     Define where to redirect for ssl instead of $host
 
@@ -42,6 +42,8 @@ ssl-cert
 ssl-key
     Define the path where the ssl-key is on the $host
    
+domain
+    Set the domain, where the application should run. Only needed for Nextcloud
 
 
 BOOLEAN PARAMETERS

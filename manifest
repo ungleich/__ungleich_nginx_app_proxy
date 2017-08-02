@@ -167,7 +167,11 @@ server {
 EOF
         else 
 	      # create the Nextcloud nginx config
-	      require="__package/nginx" __file "$nextcloud"  --owner root \
+            if [ -z "$domain" ]; then
+                echo "Parameter $domain is for Nextcloud required." >&2
+            fi          
+
+          require="__package/nginx" __file "$nextcloud"  --owner root \
 	      --group root \
 	      --mode 0644 --source - <<EOF
 #                                                                    
@@ -181,10 +185,6 @@ upstream php-handler {
 server {
     listen [::]:80;
     server_name ${domain};
-    # Let's encrypt
-    # location /.well-known {
-    #    root /var/www/nextcloud;
-    #}
 
     # enforce https
     return 301 https://${domain}\$request_uri;
@@ -241,9 +241,6 @@ server {
     #rewrite ^/.well-known/host-meta.json /public.php?service=host-meta-json
     # last;
 
-    location = /.well-known/carddav {
-      return 301 \$scheme://\$host/remote.php/dav;
-    }
     location = /.well-known/caldav {
       return 301 \$scheme://\$host/remote.php/dav;
     }
@@ -296,9 +293,6 @@ server {
     # Nextcloud config
 
     location = /.well-known/carddav {
-      return 301 \$scheme://\$host/remote.php/dav;
-    }
-    location = /.well-known/caldav {
       return 301 \$scheme://\$host/remote.php/dav;
     }
     
