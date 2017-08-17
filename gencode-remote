@@ -59,11 +59,10 @@ eof
 fi
 
 # Create the Diffie-Hellman key
+# dh=$(cat "$__object/parameter/dh")
 
-dh=$(cat "$__object/parameter/dh")
-
-cat <<eof
-if [ ! -f "${destination}dhparam.pem" ]; then
-    echo "openssl dhparam -outform PEM -out ${destination}/dhparam.pem $dh"
-fi
-eof
+# cat <<eof
+# if [ ! -f "${destination}dhparam.pem" ]; then
+#     echo "openssl dhparam -outform PEM -out ${destination}/dhparam.pem $dh"
+# fi
+# eof
