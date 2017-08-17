@@ -22,10 +22,8 @@ config_name="$(cat "$__object/parameter/config")"
 # Strip away any leading slashes
 config="${config_name##*/}"
 
-config_file="$__type/files/config/$config" 
+config_file="$__type/files/config/$config"
 proxy_config="$(cat "$__type/files/config/$config")"
-
-dh="$(cat "$__object/parameter/dh")"
 
 if [ ! -f "$config_file" ]; then
     echo "Unsupported nginx configuration: $config" >&2
@@ -84,26 +82,26 @@ cd  "$__type/files"
 # SSL / HTTPs configuration
 #
 if [ -f "$__object/parameter/ssl" ]; then
-    if [ ! -f "$__object/parameter/ssl-cert" ] || [ ! -f "$__object/parameter/ssl-key" ]  || [ ! -f "$__object/parameter/dh" ]; then
+    if [ ! -f "$__object/parameter/ssl-cert" -o ! -f "$__object/parameter/ssl-key" ]!; then
 	        echo "Missing parameter" >&2
         else
             ssl_cert="$(cat "$__object/parameter/ssl-cert")"
             ssl_key="$(cat "$__object/parameter/ssl-key")"
-    
+
             # create symlink for SSL certificates
             require="__package/nginx" __link /etc/nginx/ssl.crt \
             --source "$ssl_cert" --type symbolic
 
             require="__package/nginx" __link /etc/nginx/ssl.key \
             --source "$ssl_key" --type symbolic
-    
+
             # create the https nginx config
             require="__package/nginx" __file "$nginx_https"  --owner root \
             --group root \
             --mode 0644 --source - <<EOF
-#                                                                    
-# cdist maintained configuration - do not overwrite                  
-#        
+#
+# cdist maintained configuration - do not overwrite
+#
 
 server {
     listen 443 ssl;
@@ -147,7 +145,7 @@ server {
     ${proxy_config}
 
     # Custom config
-    ${custom_config}    
+    ${custom_config}
 }
 EOF
     fi
@@ -174,9 +172,9 @@ fi
 require="__package/nginx" __file "$nginx_http"  --owner root \
             --group root \
             --mode 0644 --source - <<EOF
-#                                                                    
-# cdist maintained configuration - do not overwrite                  
-#        
+#
+# cdist maintained configuration - do not overwrite
+#
 server {
     listen 80;
     listen [::]:80;
@@ -200,6 +198,6 @@ server {
     ${proxy_config}
 
     # Custom config
-    ${custom_config}    
+    ${custom_config}
 }
 EOF
