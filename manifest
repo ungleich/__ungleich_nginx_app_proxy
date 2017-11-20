@@ -127,15 +127,15 @@ server {
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload";
 
     # Session resumption
-    ssl_session_timeout 10m;
-    ssl_session_cache off;
-    ssl_session_tickets on;
-    ssl_session_ticket_key /etc/nginx/nginx-ticketkey;
+#    ssl_session_timeout 10m;
+#    ssl_session_cache off;
+#    ssl_session_tickets on;
+#    ssl_session_ticket_key /etc/nginx/nginx-ticketkey;
 
     # Compress everything [tm]
-    gzip on;
-    gzip_static on;
-    gzip_proxied any;
+#    gzip on;
+#    gzip_static on;
+#    gzip_proxied any;
 
     # Not for silly IE
     gzip_disable  "MSIE [1-6]\.";
@@ -178,16 +178,19 @@ require="__package/nginx" __file "$nginx_http"  --owner root \
 #
 # cdist maintained configuration - do not overwrite
 #
+upstream php-handler {
+    server unix:/run/php/php7.0-fpm.sock;
+}
 server {
     listen 80;
     listen [::]:80;
 
     server_name $__target_host;
 
-    # Compress everything [tm]
-    gzip on;
-    gzip_static on;
-    gzip_proxied any;
+#    # Compress everything [tm]
+#    gzip on;
+#    gzip_static on;
+#    gzip_proxied any;
 
     # Not for silly IE
     gzip_disable  "MSIE [1-6]\.";
