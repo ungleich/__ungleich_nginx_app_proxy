@@ -82,7 +82,7 @@ cd  "$__type/files"
 # SSL / HTTPs configuration
 #
 if [ -f "$__object/parameter/ssl" ]; then
-    if [ ! -f "$__object/parameter/ssl-cert" -o ! -f "$__object/parameter/ssl-key" ]!; then
+    if [ ! -f "$__object/parameter/ssl-cert" -o ! -f "$__object/parameter/ssl-key" ]; then
 	        echo "Missing parameter" >&2
         else
             ssl_cert="$(cat "$__object/parameter/ssl-cert")"

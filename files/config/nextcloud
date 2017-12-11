@@ -59,7 +59,6 @@
         fastcgi_param front_controller_active true;
         fastcgi_pass php-handler;
         fastcgi_intercept_errors on;
-        fastcgi_request_buffering off;
     }
 
     location ~ ^/(?:updater|ocs-provider)(?:$|/) {
