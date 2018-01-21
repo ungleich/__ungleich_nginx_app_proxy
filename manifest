@@ -31,7 +31,7 @@ if [ ! -f "$config_file" ]; then
 fi
 
 if [ -f "$__object/parameter/custom-config-from-stdin" ]; then
-    custom_config="$__object/stdin"
+    custom_config="$(cat "$__object/stdin")"
 else
     custom_config=""
 fi
