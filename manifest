@@ -31,7 +31,7 @@ if [ ! -f "$config_file" ]; then
 fi
 
 if [ -f "$__object/parameter/custom-config-from-stdin" ]; then
-    custom_config="$__object/stdin"
+    custom_config="$(cat "$__object/stdin")"
 else
     custom_config=""
 fi
@@ -82,7 +82,7 @@ cd  "$__type/files"
 # SSL / HTTPs configuration
 #
 if [ -f "$__object/parameter/ssl" ]; then
-    if [ ! -f "$__object/parameter/ssl-cert" -o ! -f "$__object/parameter/ssl-key" ]!; then
+    if [ ! -f "$__object/parameter/ssl-cert" -o ! -f "$__object/parameter/ssl-key" ]; then
 	        echo "Missing parameter" >&2
         else
             ssl_cert="$(cat "$__object/parameter/ssl-cert")"
@@ -109,6 +109,8 @@ server {
     ssl_certificate         /etc/nginx/ssl.crt;
     ssl_certificate_key     /etc/nginx/ssl.key;
 
+    server_name $__target_host;
+
 #    ssl_dhparam             /etc/nginx/dhparam.pem;
 
     # OCSP
@@ -125,15 +127,15 @@ server {
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload";
 
     # Session resumption
-    ssl_session_timeout 10m;
-    ssl_session_cache off;
-    ssl_session_tickets on;
-    ssl_session_ticket_key /etc/nginx/nginx-ticketkey;
+#    ssl_session_timeout 10m;
+#    ssl_session_cache off;
+#    ssl_session_tickets on;
+#    ssl_session_ticket_key /etc/nginx/nginx-ticketkey;
 
     # Compress everything [tm]
-    gzip on;
-    gzip_static on;
-    gzip_proxied any;
+#    gzip on;
+#    gzip_static on;
+#    gzip_proxied any;
 
     # Not for silly IE
     gzip_disable  "MSIE [1-6]\.";
@@ -176,14 +178,19 @@ require="__package/nginx" __file "$nginx_http"  --owner root \
 #
 # cdist maintained configuration - do not overwrite
 #
+upstream php-handler {
+    server unix:/run/php/php7.0-fpm.sock;
+}
 server {
     listen 80;
     listen [::]:80;
 
-    # Compress everything [tm]
-    gzip on;
-    gzip_static on;
-    gzip_proxied any;
+    server_name $__target_host;
+
+#    # Compress everything [tm]
+#    gzip on;
+#    gzip_static on;
+#    gzip_proxied any;
 
     # Not for silly IE
     gzip_disable  "MSIE [1-6]\.";
