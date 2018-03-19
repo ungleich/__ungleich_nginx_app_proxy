@@ -4,6 +4,9 @@
 
     try_files $uri/index.html $uri.html $uri @unicorn;
 
+    client_max_body_size 700M;
+
+
     # Support for X-Accel
     location /protected/ {
         internal;
@@ -16,10 +19,10 @@
         # Need to enable proxying in this location as well
         try_files $uri @unicorn;
     }
-  
+
     # Rails error pages
     error_page 500 502 503 504 /500.html;
-  
+
     location @unicorn {
         proxy_pass http://unix:/home/app/app/current/unicorn.sock;
 
