@@ -2,6 +2,8 @@
 
     root /usr/lib/one/sunstone/public/;
 
+    client_max_body_size 0;
+
     try_files $uri/index.html $uri.html $uri @sunstone;
 
     location ~* \.(ico|css|js|gif|jpe?g|png)(\?[0-9]+)?$ {
